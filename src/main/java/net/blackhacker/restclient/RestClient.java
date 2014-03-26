@@ -20,69 +20,139 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 
 /**
- *
- * @author ben
+ * The Simplest REST Client anyone could think of.
+ * 
+ * @author bh@blackhacker
  */
 public class RestClient {
+
     final private HttpClient httpClient;
     private int statusCode;
     private byte[] content;
-    
     static final Logger LOG = Logger.getLogger(RestClient.class.getName());
-    
-    public RestClient(){
+
+    public RestClient() {
         httpClient = HttpClientBuilder.create().build();
     }
-    
-    public RestClient(HttpClient httpClient) { 
+
+    public RestClient(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
-    
+
+    /**
+     * 
+     * @return Entity content from the previous request
+     */
     public byte[] getContent() {
         return content;
     }
-    
+
+    /**
+     * 
+     * @return Status code from the last request
+     */
     public int getStatusCode() {
         return statusCode;
     }
 
+    /**
+     * Performs a GET request with given url. Content from successful request
+     * is accessed from the getContent method.
+     * @param url
+     * @return status code from the performed request
+     */
     public int doGet(String url) {
         return execute(new HttpGet(url));
-    }    
-    
-    public int doGet(String url, Map<String,String> headers) {
-        return execute(buildRequest(new HttpGet(url), headers,null,null));
     }
-    
-    public int doPut(String url, byte[] payload, String mimeType){
+
+    /**
+     * Performs a GET request with given url. Content from successful request
+     * @param url
+     * @param headers
+     * @return status code from the performed request
+     */
+    public int doGet(String url, Map<String, String> headers) {
+        return execute(buildRequest(new HttpGet(url), headers, null, null));
+    }
+
+    /**
+     * Performs a PUT request with given url.
+     * @param url
+     * @param payload
+     * @param mimeType
+     * @return status code from the performed request
+     */
+    public int doPut(String url, byte[] payload, String mimeType) {
         return doPut(url, payload, mimeType, null);
     }
-    
-    public int doPut(String url, byte[] payload, String mimeType, Map<String,String> headers) {
-        return execute(buildRequest(new HttpPut(url), headers,payload,mimeType));
+
+    /**
+     * Performs a PUT request with given url.
+     * @param url
+     * @param payload
+     * @param mimeType
+     * @param headers
+     * @return status code from the performed request
+     */
+    public int doPut(String url, byte[] payload, String mimeType, Map<String, String> headers) {
+        return execute(buildRequest(new HttpPut(url), headers, payload, mimeType));
     }
-    
-    public int doDelete(String url){
-        return doDelete(url,null);
+
+    /**
+     * Performs a DELETE request with given url.
+     * @param url
+     * @return status code from the performed request
+     */
+    public int doDelete(String url) {
+        return doDelete(url, null);
     }
-    
-    public int doDelete(String url, Map<String,String> headers) {
+
+    /**
+     * 
+     * @param url
+     * @param headers
+     * @return status code from the performed request
+     */
+    public int doDelete(String url, Map<String, String> headers) {
         return execute(buildRequest(new HttpDelete(url), headers, null, null));
     }
-    
-    public int doPost(String url, byte[] payload, String mimeType){
-        return doPost(url,payload,mimeType,null);
+
+    /**
+     * 
+     * @param url
+     * @param payload
+     * @param mimeType
+     * @return status code from the performed request
+     */
+    public int doPost(String url, byte[] payload, String mimeType) {
+        return doPost(url, payload, mimeType, null);
     }
-    
-    public int doPost(String url, byte[] payload, String mimeType, Map<String,String> headers) {
+
+    /**
+     * 
+     * @param url
+     * @param payload
+     * @param mimeType
+     * @param headers
+     * @return status code from the performed request
+     */
+    public int doPost(String url, byte[] payload, String mimeType, Map<String, String> headers) {
         return execute(buildRequest(new HttpPost(url), headers, payload, mimeType));
     }
-    
-    static private HttpRequestBase buildRequest(HttpRequestBase request, Map<String,String> headers,
+
+    /**
+     * Adds Headers and Entity to HttpRequest object
+     * @param request
+     * @param headers
+     * @param entity
+     * @param mimeType
+     * @return status code from the performed request
+     */
+    static private HttpRequestBase buildRequest(HttpRequestBase request, Map<String, String> headers,
             byte[] entity, String mimeType) {
-        if (headers!=null) {
+        if (headers != null) {
             Header[] headerArray = new Header[headers.size()];
-            for(Map.Entry<String,String> entry : headers.entrySet()) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
                 Header header = new BasicHeader(
                     entry.getKey(),
                     entry.getValue());
@@ -90,20 +160,26 @@ public class RestClient {
 
             request.setHeaders(headerArray);
         }
-        
-        if ((entity!=null) && (request instanceof HttpEntityEnclosingRequestBase)) {
-            HttpEntityEnclosingRequestBase heerb = (HttpEntityEnclosingRequestBase)request;
+
+        if ((request instanceof HttpEntityEnclosingRequestBase) && (entity != null)) {
+            HttpEntityEnclosingRequestBase heerb = (HttpEntityEnclosingRequestBase) request;
             ByteArrayEntity bae = new ByteArrayEntity(entity);
             bae.setContentType(mimeType);
             heerb.setEntity(bae);
         }
-        
+
         return request;
     }
 
+    /**
+     * 
+     * @param request
+     * @return Status code of of request
+     * @see HttpRequestBase
+     */
     private int execute(HttpRequestBase request) {
-        int retval = 0;
-        InputStream is=null;
+        statusCode = 0;
+        InputStream is = null;
         content = null;
         try {
             HttpResponse response = httpClient.execute(request);
@@ -111,19 +187,22 @@ public class RestClient {
 
             if (entity != null) {
                 is = entity.getContent();
-                content = new byte[ (int)entity.getContentLength()];
+                content = new byte[(int) entity.getContentLength()];
                 is.read(content);
             }
-            
-            retval = response.getStatusLine().getStatusCode();
-            
+
+            statusCode = response.getStatusLine().getStatusCode();
+
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         } finally {
-            if(is!=null) {
-              try { is.close(); } catch (IOException ex) { }
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ex) {
+                }
             }
         }
-        return retval;
+        return statusCode;
     }
 }

@@ -4,34 +4,50 @@
 
   <groupId>net.blackhacker</groupId>
   <artifactId>bh-restclient</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>bh-restclient</name>
-  <url>http://maven.apache.org</url>
+  <url>://github.com/BeeHache/bh-restclient</url>
+  <scm>
+      <url>https://github.com/BeeHache/bh-restclient.git</url>
+      <connection>https://github.com/BeeHache/bh-restclient.git</connection>
+  </scm>
+
+
+<licenses>
+    <license>
+      <name>The MIT License (MIT)</name>
+      <url>http://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>Blackhacker</id>
+      <name>Ben King</name>
+      <email>bh@blackhacker.net</email>
+    </developer>
+  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <dependencies>
-
     <dependency>
 	<groupId>org.apache.httpcomponents</groupId>
 	<artifactId>httpclient</artifactId>
 	<version>4.3.3</version>
         <scope>provided</scope>
     </dependency>
-            
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
       <version>4.3-beta2</version>
       <scope>provided</scope>
     </dependency>
-
-
-      <dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
@@ -39,4 +55,18 @@
     </dependency>
 
   </dependencies>
+
+<reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <configuration>
+            <sourcepath>src/main/java</sourcepath>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
 </project>
