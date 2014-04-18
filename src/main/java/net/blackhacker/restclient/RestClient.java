@@ -152,10 +152,11 @@ public class RestClient {
             byte[] entity, String mimeType) {
         if (headers != null) {
             Header[] headerArray = new Header[headers.size()];
+            int i=0;
             for (Map.Entry<String, String> entry : headers.entrySet()) {
-                Header header = new BasicHeader(
+                headerArray[i++] = new BasicHeader(
                     entry.getKey(),
-                    entry.getValue());
+                    entry.getValue() );
             }
 
             request.setHeaders(headerArray);
@@ -187,8 +188,13 @@ public class RestClient {
 
             if (entity != null) {
                 is = entity.getContent();
-                content = new byte[(int) entity.getContentLength()];
-                is.read(content);
+                int l = (int) entity.getContentLength();
+                content = new byte[l];
+                int p = is.read(content);
+                
+                while(p > -1){
+                    p += is.read(content, p, l-p);
+                }
             }
 
             statusCode = response.getStatusLine().getStatusCode();
