@@ -22,13 +22,10 @@ import org.apache.http.message.BasicHeader;
 /**
  * The Simplest REST Client anyone could think of.
  * 
- * @author bh@blackhacker
+ * @author bh@blackhacker.net
  */
 public class RestClient {
-
     final private HttpClient httpClient;
-    private int statusCode;
-    private byte[] content;
     static final Logger LOG = Logger.getLogger(RestClient.class.getName());
 
     public RestClient() {
@@ -40,28 +37,12 @@ public class RestClient {
     }
 
     /**
-     * 
-     * @return Entity content from the previous request
-     */
-    public byte[] getContent() {
-        return content;
-    }
-
-    /**
-     * 
-     * @return Status code from the last request
-     */
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    /**
      * Performs a GET request with given url. Content from successful request
      * is accessed from the getContent method.
      * @param url
      * @return status code from the performed request
      */
-    public int doGet(String url) {
+    public Response doGet(String url) {
         return execute(new HttpGet(url));
     }
 
@@ -71,7 +52,7 @@ public class RestClient {
      * @param headers
      * @return status code from the performed request
      */
-    public int doGet(String url, Map<String, String> headers) {
+    public Response doGet(String url, Map<String, String> headers) {
         return execute(buildRequest(new HttpGet(url), headers, null, null));
     }
 
@@ -82,7 +63,7 @@ public class RestClient {
      * @param mimeType
      * @return status code from the performed request
      */
-    public int doPut(String url, byte[] payload, String mimeType) {
+    public Response doPut(String url, byte[] payload, String mimeType) {
         return doPut(url, payload, mimeType, null);
     }
 
@@ -94,7 +75,7 @@ public class RestClient {
      * @param headers
      * @return status code from the performed request
      */
-    public int doPut(String url, byte[] payload, String mimeType, Map<String, String> headers) {
+    public Response doPut(String url, byte[] payload, String mimeType, Map<String, String> headers) {
         return execute(buildRequest(new HttpPut(url), headers, payload, mimeType));
     }
 
@@ -103,7 +84,7 @@ public class RestClient {
      * @param url
      * @return status code from the performed request
      */
-    public int doDelete(String url) {
+    public Response doDelete(String url) {
         return doDelete(url, null);
     }
 
@@ -113,7 +94,7 @@ public class RestClient {
      * @param headers
      * @return status code from the performed request
      */
-    public int doDelete(String url, Map<String, String> headers) {
+    public Response doDelete(String url, Map<String, String> headers) {
         return execute(buildRequest(new HttpDelete(url), headers, null, null));
     }
 
@@ -124,7 +105,7 @@ public class RestClient {
      * @param mimeType
      * @return status code from the performed request
      */
-    public int doPost(String url, byte[] payload, String mimeType) {
+    public Response doPost(String url, byte[] payload, String mimeType) {
         return doPost(url, payload, mimeType, null);
     }
 
@@ -136,7 +117,7 @@ public class RestClient {
      * @param headers
      * @return status code from the performed request
      */
-    public int doPost(String url, byte[] payload, String mimeType, Map<String, String> headers) {
+    public Response doPost(String url, byte[] payload, String mimeType, Map<String, String> headers) {
         return execute(buildRequest(new HttpPost(url), headers, payload, mimeType));
     }
 
@@ -178,10 +159,10 @@ public class RestClient {
      * @return Status code of of request
      * @see HttpRequestBase
      */
-    private int execute(HttpRequestBase request) {
-        statusCode = 0;
+    private Response execute(HttpRequestBase request) {
         InputStream is = null;
-        content = null;
+        Response resp = null;
+        byte[] content;
         try {
             HttpResponse response = httpClient.execute(request);
             HttpEntity entity = httpClient.execute(request).getEntity();
@@ -195,9 +176,12 @@ public class RestClient {
                 while(p > -1){
                     p += is.read(content, p, l-p);
                 }
-            }
+            } else {
+                content = null;
+            }            
 
-            statusCode = response.getStatusLine().getStatusCode();
+            final int statusCode = response.getStatusLine().getStatusCode();
+            resp = new Response(statusCode, content);
 
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -209,6 +193,6 @@ public class RestClient {
                 }
             }
         }
-        return statusCode;
+        return resp;
     }
 }
