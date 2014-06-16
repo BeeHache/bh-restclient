@@ -165,7 +165,7 @@ public class RestClient {
         byte[] content;
         try {
             HttpResponse response = httpClient.execute(request);
-            HttpEntity entity = httpClient.execute(request).getEntity();
+            HttpEntity entity = response.getEntity();
 
             if (entity != null) {
                 is = entity.getContent();
