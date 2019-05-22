@@ -1,17 +1,17 @@
 package net.blackhacker.restclient;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.Header;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -34,6 +34,26 @@ public class RestClient {
 
     public RestClient(HttpClient httpClient) {
         this.httpClient = httpClient;
+    }
+    
+    /**
+     * Performs HEAD request to the given url.
+     * @param url
+     * @return 
+     * @see Response
+     */
+    public Response doHead(String url){
+        return execute(new HttpHead(url));
+    }
+    
+    /**
+     * 
+     * @param url
+     * @param headers
+     * @return 
+     */
+    public Response doHead(String url, Map<String,String>headers) {
+        return execute(buildRequest(new HttpHead(url), headers, null, null));
     }
 
     /**
@@ -159,40 +179,27 @@ public class RestClient {
      * @return Status code of of request
      * @see HttpRequestBase
      */
-    private Response execute(HttpRequestBase request) {
-        InputStream is = null;
-        Response resp = null;
-        byte[] content;
+     private Response execute(HttpRequestBase request) {
+        
         try {
             HttpResponse response = httpClient.execute(request);
-            HttpEntity entity = response.getEntity();
+            
+            HashMap<String,String> headers = new HashMap<>();
+            for(Header header : response.getAllHeaders()) {
+                headers.put(header.getName(), header.getValue());
+            }        
+                    
+            return new ResponseBuilder()
+                    .content(response.getEntity() == null? null: response.getEntity().getContent())
+                    .stausCode(response.getStatusLine().getStatusCode())
+                    .contentLength(response.getEntity() ==null ? -1 : response.getEntity().getContentLength())
+                    .headers(headers)
+                    .build();
 
-            if (entity != null) {
-                is = entity.getContent();
-                int l = (int) entity.getContentLength();
-                content = new byte[l];
-                int p = is.read(content);
-                
-                while(p > -1){
-                    p += is.read(content, p, l-p);
-                }
-            } else {
-                content = null;
-            }            
-
-            final int statusCode = response.getStatusLine().getStatusCode();
-            resp = new Response(statusCode, content);
-
-        } catch (IOException ex) {
+        } catch (IOException ex) { 
             LOG.log(Level.SEVERE, null, ex);
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException ex) {
-                }
-            }
         }
-        return resp;
+        
+        return null;
     }
 }

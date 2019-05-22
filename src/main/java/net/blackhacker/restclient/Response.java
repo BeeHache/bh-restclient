@@ -1,23 +1,17 @@
 package net.blackhacker.restclient;
 
+import java.io.IOException;
+import java.util.Map;
+
 /**
  *
  * @author bh@blackhacker.net
  */
-public class Response {
-    final private int statusCode;
-    final private byte[] content;
+public interface Response {
 
-    public Response(int statusCode, byte[] content) {
-        this.statusCode = statusCode;
-        this.content = content;
-    }
+    public int getStatusCode();
 
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    public byte[] getContent() {
-        return content;
-    }
+    public byte[] getContent() throws IOException;
+    
+    public Map<String,String> getHeaders();
 }
